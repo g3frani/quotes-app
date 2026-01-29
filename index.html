@@ -4,6 +4,53 @@
 <meta charset="UTF-8">
 <title>Quotes App</title>
 <style>
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+.controls button {
+    height: 44px;       /* same height as input */
+    width: 120px;       /* slightly wider to fit text on one line */
+    flex: 0 0 auto;     /* prevent button from stretching */
+    font-size: 16px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    backdrop-filter: blur(6px);
+    transition: all 0.3s ease;
+
+    white-space: nowrap;  /* prevents text from breaking into two lines */
+    display: flex;
+    align-items: center;
+    justify-content: center; /* center the text inside the button */
+}
+}
+.controls input {
+    height: 44px; /* same as button */
+    flex: 1; /* input stretches to fill remaining space */
+    max-width: 260px; /* optional limit width */
+    padding: 0 12px; /* horizontal padding inside input */
+    font-size: 16px;
+    border-radius: 10px;
+    border: none;
+    background: rgba(255,255,255,0.85);
+    outline: none;
+}
+#quote {
+    opacity: 1;
+    transition: opacity 0.3s ease; /* match fadeTime in JS */
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
 /* Reset & basic setup */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -91,6 +138,10 @@ button:hover {
     transform: scale(1.05);
 }
 }
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
 </style>
 </head>
 <body>
@@ -101,20 +152,18 @@ button:hover {
 </video>
 <div id="overlay"></div>
 
-
-   <div class="center">
+<div class="center">
     <h1>💬 Daily Quotes</h1>
 
     <div class="quote-box">
         <p id="quote">Click the button to get a quote!</p>
     </div>
 
-    <input type="text" id="keyword" placeholder="Type a word to filter quotes...">
-    <button onclick="newQuote()">New Quote</button>
-</div>
-
-let isAnimating = false;
-let fadeTimeout = null;
+    <!-- New flex container -->
+    <div class="controls">
+        <input type="text" id="keyword" placeholder="Search by keyword...">
+        <button id="newQuoteBtn">New Quote</button>
+    </div>
 
    <script>
  
@@ -326,12 +375,16 @@ let fadeTimeout = null;
 {
        text:"If you can dream it, you can achieve it.", author:"Zig Ziglar"}
 ];
- function newQuote() {
-    if (isAnimating) return; // block spam clicks
+ const quoteEl = document.getElementById("quote");
+const btn = document.getElementById("newQuoteBtn");
+let isAnimating = false;
+
+function newQuote() {
+    if (isAnimating) return; // prevent fast clicks
 
     isAnimating = true;
+    btn.disabled = true;
 
-    const quoteEl = document.getElementById("quote");
     const keyword = document.getElementById("keyword").value.trim().toLowerCase();
 
     let filtered = keyword
@@ -339,7 +392,6 @@ let fadeTimeout = null;
         : quotes;
 
     let output;
-
     if (filtered.length === 0) {
         output = `"No quotes found for '${keyword}'."`;
     } else {
@@ -347,26 +399,31 @@ let fadeTimeout = null;
         output = `"${q.text}"<br><em>- ${q.author || "Unknown"}</em>`;
     }
 
-    // Clear any old animation
-    if (fadeTimeout) clearTimeout(fadeTimeout);
+    const fadeTime = 300; // milliseconds for fade-out AND fade-in
 
     // Fade out
+    quoteEl.style.transition = `opacity ${fadeTime}ms ease`;
     quoteEl.style.opacity = 0;
 
-    fadeTimeout = setTimeout(() => {
+    setTimeout(() => {
+        // Update content and fade in
         quoteEl.innerHTML = output;
         quoteEl.style.opacity = 1;
 
-        // Unlock after fade-in completes
+        // Unlock after fade-in
         setTimeout(() => {
             isAnimating = false;
-        }, 1500);
+            btn.disabled = false;
+        }, fadeTime);
 
-    }, 1500);
+    }, fadeTime);
 }
 
-
+// Show a quote on page load
 window.onload = newQuote;
+
+// Button click
+btn.addEventListener("click", newQuote);
 </script>
 
 </body>
