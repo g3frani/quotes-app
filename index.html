@@ -113,6 +113,9 @@ button:hover {
     <button onclick="newQuote()">New Quote</button>
 </div>
 
+let isAnimating = false;
+let fadeTimeout = null;
+
    <script>
  
 
@@ -324,30 +327,44 @@ button:hover {
        text:"If you can dream it, you can achieve it.", author:"Zig Ziglar"}
 ];
  function newQuote() {
-    const quoteElement = document.getElementById("quote");
+    if (isAnimating) return; // block spam clicks
+
+    isAnimating = true;
+
+    const quoteEl = document.getElementById("quote");
     const keyword = document.getElementById("keyword").value.trim().toLowerCase();
 
-    // Filter by text only
-    let filteredQuotes = keyword ? quotes.filter(q => q.text.toLowerCase().includes(keyword)) : quotes;
+    let filtered = keyword
+        ? quotes.filter(q => q.text.toLowerCase().includes(keyword))
+        : quotes;
 
-    let quoteContent = '';
-    if (filteredQuotes.length === 0) {
-        quoteContent = `"No quotes found for '${keyword}'."`;
+    let output;
+
+    if (filtered.length === 0) {
+        output = `"No quotes found for '${keyword}'."`;
     } else {
-        const randomIndex = Math.floor(Math.random() * filteredQuotes.length);
-        const quote = filteredQuotes[randomIndex];
-        quoteContent = `"${quote.text}"<br><em>- ${quote.author || "Unknown"}</em>`;
+        const q = filtered[Math.floor(Math.random() * filtered.length)];
+        output = `"${q.text}"<br><em>- ${q.author || "Unknown"}</em>`;
     }
 
-    // Fade effect
-    quoteElement.style.transition = "opacity 1.5s ease";
-    quoteElement.style.opacity = 0;
+    // Clear any old animation
+    if (fadeTimeout) clearTimeout(fadeTimeout);
 
-    setTimeout(() => {
-        quoteElement.innerHTML = quoteContent;
-        quoteElement.style.opacity = 1;
+    // Fade out
+    quoteEl.style.opacity = 0;
+
+    fadeTimeout = setTimeout(() => {
+        quoteEl.innerHTML = output;
+        quoteEl.style.opacity = 1;
+
+        // Unlock after fade-in completes
+        setTimeout(() => {
+            isAnimating = false;
+        }, 1500);
+
     }, 1500);
 }
+
 
 window.onload = newQuote;
 </script>
